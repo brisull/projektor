@@ -92,6 +92,7 @@
         this.spinner = options.spinner || 'img/spinner.gif';
         this.showSpinner = options.showSpinner || true;
         this.intId = 0;
+        this.lastFramePlayedAt = null
 
         this.totalSprites = this.sprites.length;
         this.loadedSprites = 0;
@@ -178,12 +179,7 @@
         var play = setInterval(function () {
             if ($self.spritesLoaded) {
                 clearInterval(play);
-                // clearInterval($self.intId);
-                // window.cancelAnimationFrame($self.intId);
                 advance.call($(that));
-                // $self.intId = setInterval(function () { 
-                //     advance.call($(that)); 
-                // }, $self.fps);
             }
             
             console.log('play');
@@ -194,8 +190,17 @@
     function advance() {
         var that = $(this);
         var $self = this.data('projektor');
+        var lastPlayed = Number( +new Date - $self.lastFramePlayedAt);
+        // console.log(+new Date);
         setTimeout( function() {
             $self.intId = window.requestAnimationFrame(function() { advance.call(that) });
+
+            if (lastPlayed < $self.fps ) {
+                // console.log(':'+ lastPlayed);
+                // comment this out/in to use/not use setTimeout
+                // return;
+            }
+            
             var $sprite = $self.sprites.eq($self.spritePlaying), // grab the current sprite
 
             // how many keyframes does it have? inquiring minds and the like
@@ -220,6 +225,8 @@
             var yPos = -Math.abs($self.keyframeOffset * $self.stageHeight);
             moveSprite($sprite, yPos );
             $self.keyframeOffset++;
+            console.log( Number( +new Date - $self.lastFramePlayedAt));
+            $self.lastFramePlayedAt = +new Date;
         }, $self.fps );
     }
 
