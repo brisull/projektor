@@ -1,16 +1,6 @@
 ﻿(function ($) {
     
-    window.requestAnimFrame = (function(){
-        return  
-            window.requestAnimationFrame       || 
-            window.webkitRequestAnimationFrame || 
-            window.mozRequestAnimationFrame    || 
-            window.oRequestAnimationFrame      || 
-            window.msRequestAnimationFrame     || 
-            function(/* function */ callback){
-                window.setTimeout(callback, 1000 / 60);
-            };
-    })();
+    
     
     var supports3d = false;
     
@@ -47,6 +37,7 @@
 
     $(document).ready( function() {
         supports3d = has3d();
+
     });
 
     $.fn.projektor = function () {
@@ -162,6 +153,7 @@
             }).each(function(){
             if (this.complete || this.complete === undefined){ 
                     this.src = this.src;
+                    $(this).trigger('load');
                 }
             });
         });
@@ -186,45 +178,53 @@
         var play = setInterval(function () {
             if ($self.spritesLoaded) {
                 clearInterval(play);
-                clearInterval($self.intId);
-                $self.intId = setInterval(function () { advance.call($(that)); }, $self.fps);
+                // clearInterval($self.intId);
+                // window.cancelAnimationFrame($self.intId);
+                advance.call($(that));
+                // $self.intId = setInterval(function () { 
+                //     advance.call($(that)); 
+                // }, $self.fps);
             }
+            
             console.log('play');
         }, 500);
 
     }
 
     function advance() {
+        var that = $(this);
         var $self = this.data('projektor');
-        var $sprite = $self.sprites.eq($self.spritePlaying), // grab the current sprite
+        setTimeout( function() {
+            $self.intId = window.requestAnimationFrame(function() { advance.call(that) });
+            var $sprite = $self.sprites.eq($self.spritePlaying), // grab the current sprite
 
-        // how many keyframes does it have? inquiring minds and the like
-        keyframes = $sprite.data('keyframes'); 
-        // if it's the last sprite (remember, we count down backwards) and we're at the last keyframe, we're done!
-        if ($self.spritePlaying == 0 && $self.keyframeOffset == keyframes) { 
-            reachedEnd.call($(this));
-            return;
-        }
-        // we pass the last frame because we like it when z stacking works in our favor (the next sprite's keyframe will show through below the last-played sprite)
-        if ($self.keyframeOffset == keyframes + 1) { 
-            // remove it from the dom, we don't want a huge image hanging around to eat up memory
-            // $sprite.remove(); 
-            $self.spritePlaying--;
+            // how many keyframes does it have? inquiring minds and the like
+            keyframes = $sprite.data('keyframes'); 
+            // if it's the last sprite (remember, we count down backwards) and we're at the last keyframe, we're done!
+            if ($self.spritePlaying == 0 && $self.keyframeOffset == keyframes) { 
+                reachedEnd.call(that);
+                return;
+            }
+            // we pass the last frame because we like it when z stacking works in our favor (the next sprite's keyframe will show through below the last-played sprite)
+            if ($self.keyframeOffset == keyframes + 1) { 
+                // remove it from the dom, we don't want a huge image hanging around to eat up memory
+                // $sprite.remove(); 
+                $self.spritePlaying--;
 
-            // reset everything
-            $sprite = $self.sprites.eq($self.spritePlaying);
-            keyframes = $sprite.data('keyframes');
-            $self.keyframeOffset = 0;
-        }
-        // $sprite.css('top', -$self.keyframeOffset * $self.stageHeight); // move to the next keyframe
-        var yPos = -Math.abs($self.keyframeOffset * $self.stageHeight);
-        moveSprite($sprite, yPos );
-        $self.keyframeOffset++;
+                // reset everything
+                $sprite = $self.sprites.eq($self.spritePlaying);
+                keyframes = $sprite.data('keyframes');
+                $self.keyframeOffset = 0;
+            }
+            // $sprite.css('top', -$self.keyframeOffset * $self.stageHeight); // move to the next keyframe
+            var yPos = -Math.abs($self.keyframeOffset * $self.stageHeight);
+            moveSprite($sprite, yPos );
+            $self.keyframeOffset++;
+        }, $self.fps );
     }
 
     function moveSprite(el, yPos)  {
-        
-        // Hardware acceleration doesn't really make a dif if you're repainting each
+        // Hardware acceleration doesn't really make a dif if you're repainting each time
         supports3d = false;
         if ( supports3d ) {
             var s = "translateY("+ yPos + "px)";
@@ -243,7 +243,8 @@
     function reachedEnd() {
         var $self = this.data('projektor');
         var that = this;
-        clearInterval($self.intId);
+        // clearInterval($self.intId);
+        window.cancelAnimationFrame($self.intId);
         if ($self.repeat) {
             setTimeout(function () {
                 reset.call($(that));
@@ -260,7 +261,8 @@
     function stop() {
         //code to stop media
         var $self = this.data('projektor');
-        clearInterval($self.intId);
+        // clearInterval($self.intId);
+        window.cancelAnimationFrame($self.intId);
         console.log('stop');
     }
 

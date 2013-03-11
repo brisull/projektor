@@ -236,6 +236,9 @@ body
     position: relative;
 }
 
+.video-player img {
+    position: absolute;
+}
 
 #footer 
 {

@@ -4,6 +4,7 @@
 		<title>Win 8 Prototype</title>
 		<link rel="stylesheet" href="main.css" type="text/css" />
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+        <script src="request_anim_frame.js"></script>
 		<script src="jquery.projektor.js"></script>
 		<script type="text/javascript">
 
