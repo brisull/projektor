@@ -228,17 +228,8 @@ body
     margin: auto;
 }
 
-.video-player 
-{
-    width: 613px;
-    height: 350px;
-    overflow: hidden;
-    position: relative;
-}
 
-.video-player img {
-    position: absolute;
-}
+
 
 #footer 
 {
