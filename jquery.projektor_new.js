@@ -161,7 +161,7 @@
             // $(self.sprites).css('opacity','1');
             // if we're coming back to the video in the middle of it
             // resume where it left off
-            if (this.hasPlayed ) {
+            if ((this.hasPlayed && !this.isFinished) || this.spritePlaying == 0 ) {
                 $(self.sprites).eq(self.spritePlaying+1).css('opacity','1');
                 self.advance();
             }
