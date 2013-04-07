@@ -16,12 +16,22 @@
                     },
                     onStop: function() {
                         var self = this;
-                        this.reset();
-                        this.$el.unbind('click').bind('click', function() {
-                            self.play();
-                        });
+                        // this.reset();
+                        // this.$el.unbind('click').bind('click', function() {
+
+                        //     self.rewind();
+                        // });
                     }
-                }).projektor('play') ;  
+                });  
+            });
+            $('#btn_play').click( function() {
+                $(this).parents('.video-player-container').find('.video-player').projektor('play');
+            });
+            $('#btn_rewind').click( function() {
+                $(this).parents('.video-player-container').find('.video-player').projektor('rewind');
+            });
+            $('#btn_pause').click( function() {
+                $(this).parents('.video-player-container').find('.video-player').projektor('stop');
             });
         });
         </script>
@@ -70,8 +80,13 @@
                     <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_001.jpg">
                     <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_000.jpg">
                 </div>
+                <div>
+                    <button type="button" id="btn_rewind">&lt;</button>
+                    <button type="button" id="btn_pause">||</button>
+                    <button type="button" id="btn_play">&gt;</button>
+                </div>
             </div>
-            
+
         </div>
 
 	</body>

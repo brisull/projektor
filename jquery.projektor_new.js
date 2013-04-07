@@ -88,7 +88,7 @@
         _defaults: {
             repeat: false
             , repeatDelay: 0
-            , fps: 42
+            , fps: 38
             , spinnerSrc: 'img/spinner.gif'
             , showSpinner: true
             , spinnerClass: 'spinner'
@@ -103,6 +103,7 @@
             , onImageLoadTick: $.noop
             , didInit: false
             , spriteSrcs: []
+            , direction: 'forward'
         }
 
         , getSpritesFromImages: function() {
@@ -116,12 +117,53 @@
 
         , play: function () {
             var self = this;
+            if ( this.isPlaying) {
+                this.stop();
+            }
             this.isPlaying = true;
-
+            self.options.direction = 'forward';
             // if we're coming back to the video in the middle of it
             // resume where it left off
             if (this.hasPlayed && !this.isFinished) {
                 self.advance()
+            }
+
+            // otherwise, go through the loading process again
+            // regardless if the video has already played
+            else {
+                this.hasPlayed = true;
+                this.reset();
+                this.removeSprites();
+                this.loadSprites()
+                        .fail(function () {
+                            // img loading failed for whatever reason
+                            // handle it here
+                        })
+                        // two opacity changes: one for the top image and one for the previous one to make sure it's ready
+                        .done(function () {
+                            $(self.sprites[self.sprites.length - 1])
+                                .hide()
+                                .css('opacity','1')
+                                .fadeIn(400, function () {
+                                    self.advance()
+                                }).prev().css('opacity','1');
+                        });
+            }
+        }
+
+        , rewind: function () {
+            var self = this;
+            if ( this.isPlaying) {
+                this.stop();
+            }
+            this.isPlaying = true;
+            self.options.direction = 'reverse';
+            // $(self.sprites).css('opacity','1');
+            // if we're coming back to the video in the middle of it
+            // resume where it left off
+            if (this.hasPlayed ) {
+                $(self.sprites).eq(self.spritePlaying+1).css('opacity','1');
+                self.advance();
             }
 
             // otherwise, go through the loading process again
@@ -182,14 +224,18 @@
             // reverse them so they're in the right order and prepend them
             this.sprites.reverse();
             this.$el.prepend(this.sprites);
+            var allSprites = self.$el.find('.sprite');
+            allSprites.css({'opacity':'0', 'position': 'absolute'});
 
 
             // onLoad event for sprites
-            self.$el.find('.sprite').css({'opacity':'0', 'position': 'absolute'}).unbind('load').bind('load', function () {
+            allSprites.unbind('load').bind('load', function () {
                 loaded++;
                 self.options.onImageLoadTick.call(self, loaded, total);
                 $(this).attr('data-keyframes', Math.round($(this).height() / self.stageHeight));
-
+                if ( self.options.direction == 'reverse') {
+                    $(this).css('top',-Math.abs($(this).height()));
+                }
                 // console.log('loaded: ' + loaded);
                 if (loaded == total) {
                     self.$el.find('.sprite').unbind('load');
@@ -205,8 +251,9 @@
         , advance: function () {
             var def = new $.Deferred();
             var self = this;
+            var direction = this.options.direction;
             this.isFinished = false;
-
+            
             self.options.onPlayStart.call(self);
 
             (function loop() {
@@ -226,30 +273,37 @@
                     var keyframes = +sprite.getAttribute('data-keyframes'); // how many keyframes does it have? inquiring minds and the like
                     // console.log(keyframes);
                     // if it's the last sprite (remember, we count down backwards) and we're at the last keyframe, we're done!
-                    if (sprite.previousSibling == null || (self.spritePlaying == 0 && self.keyframeOffset == keyframes)) {
+                    if (  direction == 'forward' && ( self.spritePlaying == 0 && self.keyframeOffset == keyframes)
+                        || ( direction == 'reverse' && ( self.spritePlaying == self.sprites.length-1 && self.keyframeOffset == keyframes) )) {
                         def.resolve();
                         self.reachedEnd();
-
                         return;
                     }
 
                     // we pass the last frame because we like it when z stacking works in our favor (the next sprite's keyframe will show through below the last-played sprite)
-                    if (self.keyframeOffset == keyframes + 1) {
-                        // remove it from the dom, we don't want a huge image hanging around to eat up memory
-                        var parent = sprite.parentNode;
+                    if (self.keyframeOffset == keyframes + 1 || (direction == 'reverse' && self.keyframeOffset == keyframes)) {
 
                         
-                        // BRI -- Webkit renders all images for each frame regardless of z-stacking. I made all sprites have opacity=0. 
-                        // This line sets the previous one to opacity=1 so it is the only sprite rendered besides the current one.
-                        // Seems to have solved the problem of longer animations playing slow in Webkit
-                        $(sprite).prevAll().eq(1).css('opacity','1');
+
+                        // remove it from the dom, we don't want a huge image hanging around to eat up memory
+                        var parent = sprite.parentNode;
 
                         if (!!parent) {
                             // sprite.src = '';
                             // sprite.parentNode.removeChild(sprite);
                             $(sprite).css('opacity','0');
-                            self.spritePlaying--;
+                            
 
+                            if ( direction == 'reverse') {
+                                self.spritePlaying++;
+                                $(sprite).nextAll().eq(0).css('opacity','1');
+                            }
+                            else {
+                                // $(sprite).css('opacity','0');
+                                self.spritePlaying--;
+                                $(sprite).prevAll().eq(1).css('opacity','1');
+                            }
+                            
                             // reset everything
                             sprite = self.sprites[self.spritePlaying];
 
@@ -263,7 +317,16 @@
                         }
                     }
                     // $sprite.css('top', -$self.keyframeOffset * $self.stageHeight); // move to the next keyframe
-                    var yPos = -Math.abs(self.keyframeOffset * self.stageHeight);
+                    
+                    if ( direction == 'reverse') {
+                        var pos = $(sprite).position();
+                        var yPos = pos.top + self.stageHeight;
+
+                    }
+                    else {
+                        var yPos = -Math.abs(self.keyframeOffset * self.stageHeight);
+                    }
+                    // console.log(yPos);
                     sprite.style.top = yPos + 'px';
                     // console.log(self.keyframeOffset);
 
@@ -280,7 +343,7 @@
             this.options.onPlayEnd.call(this);
             this.isFinished = true;
             this.stop();
-            this.deleteSprites(this.sprites);
+            // this.deleteSprites(this.sprites);
         }
 
         , deleteSprites: function (spriteList) {
@@ -299,14 +362,19 @@
 
         , reset: function () {
             this.keyframeOffset = 0;
-            this.spritePlaying = this.options.spriteSrcs.length - 1;
+            if ( this.options.direction == 'reverse'){
+                this.spritePlaying = 0;
+            }
+            else {
+                this.spritePlaying = this.options.spriteSrcs.length - 1;
+            }
             this.isFinished = true;
             this.deleteSprites(this.sprites);
         }
 
         , removeSprites: function () {
             //remove possible remaining sprite from previous plays
-            // this.$el.find('.sprite').remove();
+            this.$el.find('.sprite').remove();
         }
     };
 
