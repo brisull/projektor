@@ -128,6 +128,7 @@
             // if we're coming back to the video in the middle of it
             // resume where it left off
             if (this.hasPlayed && !this.isFinished) {
+                
                 self.advance()
             }
 
