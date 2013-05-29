@@ -33,6 +33,12 @@
             $('#btn_pause').click( function() {
                 $(this).parents('.video-player-container').find('.video-player').projektor('stop');
             });
+
+            $('#slider').bind('change', function() {
+                $('#sliderVal').val($(this).val());
+            });
+            $('#slider').trigger('change');
+
         });
         </script>
 	</head>
@@ -42,7 +48,7 @@
             
             <div class="video-player-container">
                 <div class="video-player" style="width: 765px; height: 417px;">
-                    <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_036.jpg">
+                    <!-- <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_036.jpg">
                     <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_035.jpg">
                     <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_034.jpg">
                     <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_033.jpg">
@@ -75,7 +81,7 @@
                     <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_006.jpg">
                     <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_005.jpg">
                     <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_004.jpg">
-                    <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_003.jpg">
+                    <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_003.jpg"> -->
                     <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_002.jpg">
                     <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_001.jpg">
                     <img data-src="//win8wwfb24.blob.core.windows.net/strips/gestsnap3_000.jpg">
@@ -84,11 +90,13 @@
                     <button type="button" id="btn_rewind">&lt;</button>
                     <button type="button" id="btn_pause">||</button>
                     <button type="button" id="btn_play">&gt;</button>
+                    <input type='range' min='1' max='100' id="slider" />
+                    <input type="text" value="0" id="sliderVal" />
+                    <input type="text" value="0" id="frameNum" />
                 </div>
             </div>
 
         </div>
-
 	</body>
 
 </html>

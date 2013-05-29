@@ -77,6 +77,9 @@
         this.hasPlayed = false;
         this.finished = false;
 
+        this.totalFrames = 0;
+        this.currentFrame = 0;
+
         if ( this.options.spriteSrcs.length == 0 ) {
             this.getSpritesFromImages.call(this);
         }
@@ -88,7 +91,7 @@
         _defaults: {
             repeat: false
             , repeatDelay: 0
-            , fps: 38
+            , fps: 14
             , spinnerSrc: 'img/spinner.gif'
             , showSpinner: true
             , spinnerClass: 'spinner'
@@ -163,6 +166,7 @@
             // resume where it left off
             if ((this.hasPlayed && !this.isFinished) || this.spritePlaying == 0 ) {
                 $(self.sprites).eq(self.spritePlaying+1).css('opacity','1');
+                self.keyframeOffset = parseInt($(self.sprites).eq(self.spritePlaying).attr('data-keyframes') - self.keyframeOffset);
                 self.advance();
             }
 
@@ -173,19 +177,19 @@
                 this.reset();
                 this.removeSprites();
                 this.loadSprites()
-                        .fail(function () {
-                            // img loading failed for whatever reason
-                            // handle it here
-                        })
-                        // two opacity changes: one for the top image and one for the previous one to make sure it's ready
-                        .done(function () {
-                            $(self.sprites[self.sprites.length - 1])
-                                .hide()
-                                .css('opacity','1')
-                                .fadeIn(400, function () {
-                                    self.advance()
-                                }).prev().css('opacity','1');
-                        });
+                    .fail(function () {
+                        // img loading failed for whatever reason
+                        // handle it here
+                    })
+                    // two opacity changes: one for the top image and one for the previous one to make sure it's ready
+                    .done(function () {
+                        $(self.sprites[self.sprites.length - 1])
+                            .hide()
+                            .css('opacity','1')
+                            .fadeIn(400, function () {
+                                self.advance()
+                            }).prev().css('opacity','1');
+                    });
             }
         }
 
@@ -232,7 +236,10 @@
             allSprites.unbind('load').bind('load', function () {
                 loaded++;
                 self.options.onImageLoadTick.call(self, loaded, total);
-                $(this).attr('data-keyframes', Math.round($(this).height() / self.stageHeight));
+                var keyFrames = Math.round($(this).height() / self.stageHeight);
+                $(this).attr('data-keyframes', keyFrames);
+                self.totalFrames += keyFrames;
+
                 if ( self.options.direction == 'reverse') {
                     $(this).css('top',-Math.abs($(this).height()));
                 }
@@ -240,11 +247,12 @@
                 if (loaded == total) {
                     self.$el.find('.sprite').unbind('load');
                     self.options.onImagesLoaded.call(self);
+                    console.log("Total Frames: "+ self.totalFrames);
                     def.resolve();
                 }
             });
 
-           
+            
             return def;
         }
 
@@ -279,11 +287,11 @@
                         self.reachedEnd();
                         return;
                     }
-
+                    console.log(self.keyframeOffset);
                     // we pass the last frame because we like it when z stacking works in our favor (the next sprite's keyframe will show through below the last-played sprite)
-                    if (self.keyframeOffset == keyframes + 1 || (direction == 'reverse' && self.keyframeOffset == keyframes)) {
+                    if ((direction == 'forward' && self.keyframeOffset == keyframes + 1 ) || (direction == 'reverse' && self.keyframeOffset == keyframes)) {
 
-                        
+                        // console.log( self.spritePlaying);
 
                         // remove it from the dom, we don't want a huge image hanging around to eat up memory
                         var parent = sprite.parentNode;
@@ -293,6 +301,8 @@
                             // sprite.parentNode.removeChild(sprite);
                             $(sprite).css('opacity','0');
                             
+                            
+                            
 
                             if ( direction == 'reverse') {
                                 self.spritePlaying++;
@@ -301,13 +311,14 @@
                             else {
                                 // $(sprite).css('opacity','0');
                                 self.spritePlaying--;
+                                self.currentFrame--;
                                 $(sprite).prevAll().eq(1).css('opacity','1');
                             }
                             
                             // reset everything
                             sprite = self.sprites[self.spritePlaying];
 
-
+                            // console.log( self.spritePlaying);
                             keyframes = +sprite.getAttribute('data-keyframes');
                             self.keyframeOffset = 0;
                         }
@@ -321,13 +332,17 @@
                     if ( direction == 'reverse') {
                         var pos = $(sprite).position();
                         var yPos = pos.top + self.stageHeight;
-
+                        self.currentFrame--;
+                        // console.log('rev');
                     }
                     else {
                         var yPos = -Math.abs(self.keyframeOffset * self.stageHeight);
+                        self.currentFrame++;
+                        // console.log('fwd');
                     }
                     // console.log(yPos);
                     sprite.style.top = yPos + 'px';
+                    $('#frameNum').val(self.currentFrame);
                     // console.log(self.keyframeOffset);
 
                     self.keyframeOffset++;
