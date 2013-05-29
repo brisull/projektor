@@ -107,6 +107,7 @@
             , didInit: false
             , spriteSrcs: []
             , direction: 'forward'
+            , playTo: 20
         }
 
         , getSpritesFromImages: function() {
@@ -128,49 +129,8 @@
             // if we're coming back to the video in the middle of it
             // resume where it left off
             if (this.hasPlayed && !this.isFinished) {
-                
-                self.advance()
-            }
-
-            // otherwise, go through the loading process again
-            // regardless if the video has already played
-            else {
-                this.hasPlayed = true;
-                this.reset();
-                this.removeSprites();
-                this.loadSprites()
-                        .fail(function () {
-                            // img loading failed for whatever reason
-                            // handle it here
-                        })
-                        // two opacity changes: one for the top image and one for the previous one to make sure it's ready
-                        .done(function () {
-                            $(self.sprites[self.sprites.length - 1])
-                                .hide()
-                                .css('opacity','1')
-                                .fadeIn(400, function () {
-                                    self.advance()
-                                }).prev().css('opacity','1');
-                        });
-            }
-        }
-
-        , rewind: function () {
-            var self = this;
-            if ( this.isPlaying) {
-                this.stop();
-            }
-            this.isPlaying = true;
-            self.options.direction = 'reverse';
-            // $(self.sprites).css('opacity','1');
-            // if we're coming back to the video in the middle of it
-            // resume where it left off
-            if ((this.hasPlayed && !this.isFinished) || this.spritePlaying == 0 ) {
-                $(self.sprites).eq(self.spritePlaying+1).css('opacity','1');
-                self.keyframeOffset = parseInt($(self.sprites).eq(self.spritePlaying).attr('data-keyframes') - self.keyframeOffset);
                 self.advance();
             }
-
             // otherwise, go through the loading process again
             // regardless if the video has already played
             else {
@@ -194,14 +154,86 @@
             }
         }
 
+        , rewind: function () {
+            var self = this;
+            if ( this.isPlaying) {
+                this.stop();
+            }
+            this.isPlaying = true;
+            self.options.direction = 'reverse';
+
+            
+
+            // $(self.sprites).css('opacity','1');
+            // if we're coming back to the video in the middle of it
+            // resume where it left off
+            if ((this.hasPlayed && !this.isFinished) || this.spritePlaying == 0 ) {
+                $(self.sprites).eq(self.spritePlaying+1).css('opacity','1');
+                self.keyframeOffset = parseInt($(self.sprites).eq(self.spritePlaying).attr('data-keyframes') - self.keyframeOffset);
+
+                self.advance();
+            }
+
+            // otherwise, go through the loading process again
+            // regardless if the video has already played
+            else {
+                this.hasPlayed = true;
+                this.reset();
+                this.removeSprites();
+                this.loadSprites()
+                    .fail(function () {
+                        // img loading failed for whatever reason
+                        // handle it here
+                    })
+                    // two opacity changes: one for the top image and one for the previous one to make sure it's ready
+                    .done(function () {
+                        self.currentFrame = self.totalFrames;
+                        $(self.sprites).eq(self.spritePlaying).css('opacity','1');
+                        $(self.sprites[self.sprites.length - 1])
+                            .hide()
+                            .css('opacity','1')
+                            .fadeIn(400, function () {
+                                self.advance()
+                            }).prev().css('opacity','1');
+                    });
+            }
+        }
+
         , stop: function () {
             if (this.isPlaying) {
                 this.isPlaying = false;
                 window.cancelAnimationFrame(this.intId);
-
+                this.getRealCurrentFrame();
                 this.options.onStop.call(this);
             }
         }
+
+        , getRealCurrentFrame: function() {
+            var self = this;
+            var def = new $.Deferred();
+            var sprite = self.sprites[self.spritePlaying];
+            var spriteTop = parseInt(sprite.style.top, 10);
+            self.keyframeOffset = Math.abs(spriteTop / this.stageHeight)+1;
+            var newFrameNum = 0;
+            $(sprite).nextAll().each( function() {
+                newFrameNum += parseInt($(this).data('keyframes'), 10);
+                // alert( newFrameNum);
+            });
+            newFrameNum += self.keyframeOffset; 
+            // alert( newFrameNum);
+            $(sprite).css('opacity','1');
+            // $('#frameNum').val(newFrameNum);
+            self.frameNum = newFrameNum;
+            console.dir({
+                'currentFrame': self.currentFrame, 
+                'spritePlaying': this.spritePlaying,
+                'spriteTop': parseInt(sprite.style.top, 10),
+                'frameOffset': this.keyframeOffset,
+                'spriteSrc': sprite.src 
+            });
+        }
+
+         
 
         // returns a dfd object that gets resolved when sprites are finished loading
         , loadSprites: function () {
@@ -232,7 +264,7 @@
             var allSprites = self.$el.find('.sprite');
             allSprites.css({'opacity':'0', 'position': 'absolute'});
 
-
+            self.totalFrames = 0;
             // onLoad event for sprites
             allSprites.unbind('load').bind('load', function () {
                 loaded++;
@@ -288,7 +320,7 @@
                         self.reachedEnd();
                         return;
                     }
-                    console.log(self.keyframeOffset);
+                    
                     // we pass the last frame because we like it when z stacking works in our favor (the next sprite's keyframe will show through below the last-played sprite)
                     if ((direction == 'forward' && self.keyframeOffset == keyframes + 1 ) || (direction == 'reverse' && self.keyframeOffset == keyframes)) {
 
@@ -302,9 +334,6 @@
                             // sprite.parentNode.removeChild(sprite);
                             $(sprite).css('opacity','0');
                             
-                            
-                            
-
                             if ( direction == 'reverse') {
                                 self.spritePlaying++;
                                 $(sprite).nextAll().eq(0).css('opacity','1');
@@ -343,11 +372,17 @@
                     }
                     // console.log(yPos);
                     sprite.style.top = yPos + 'px';
-                    $('#frameNum').val(self.currentFrame);
                     // console.log(self.keyframeOffset);
-
+                    console.log(self.currentFrame);
                     self.keyframeOffset++;
+
                     self.lastFramePlayedAt = +new Date();
+                    if ( self.currentFrame == self.options.playTo) {
+                        window.cancelAnimationFrame(self.intId);
+                        self.stop();
+                        return;
+                    }
+                    $('#frameNum').val(self.currentFrame);
                 }
 
             } ());
@@ -358,7 +393,9 @@
         , reachedEnd: function () {
             this.options.onPlayEnd.call(this);
             this.isFinished = true;
+            this.keyframeOffset = 0;
             this.stop();
+
             // this.deleteSprites(this.sprites);
         }
 
@@ -378,8 +415,10 @@
 
         , reset: function () {
             this.keyframeOffset = 0;
+            this.currentFrame = 0;
             if ( this.options.direction == 'reverse'){
                 this.spritePlaying = 0;
+                this.currentFrame = this.totalFrames;
             }
             else {
                 this.spritePlaying = this.options.spriteSrcs.length - 1;
