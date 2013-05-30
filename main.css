@@ -34,8 +34,8 @@
 body 
 {
     font-family: 'Segoe UI';
-    color: #FFF;
-    background: #000;
+    color: #000;
+    background-color: #FFF;
 }
 
 /* EVENT BLOCKER */
@@ -109,100 +109,7 @@ body
     color: #FF8C00;
 }
 
-/* POST MODULE */
-#post-module 
-{
-    display: none;
-    z-index: 10;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
 
-#post-module .background 
-{
-    background: #000;
-    opacity: 0.25;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 10;
-}
-
-#post-module .post-box
-{
-    z-index: 12;
-    width: 408px;
-    height: 500px;
-    position: absolute;
-}
-
-#post-module .post-box .header 
-{
-    background: #00bcf2;
-    height: 44px;   
-}
-
-#post-module .post-box .header p 
-{
-    font-size: 18px;   
-    padding-left: 20px;
-    padding-top: 9px;
-}
-
-#post-module .post-box .main-area 
-{
-     height: 456px;  
-     background: #FFF;
-}
-
-#post-module .post-box .main-area .subhead 
-{
-    font-size: 13px;
-    color: #000;
-    padding-left: 20px;
-    padding-top: 9px;
-}
-
-#post-module .post-box .main-area .post-image 
-{
-    margin-left: 20px;
-    margin-top: 10px;   
-}
-
-#post-module .post-box .main-area .post-image img 
-{
-    width: 368px;
-    height: 305px;   
-}
-
-#post-module .post-box .main-area .text-box 
-{
-    margin-left: 20px;
-    margin-top: 5px; 
-    padding: 5px;
-    width: 358px;
-    height: 46px;  
-    font-size: 14px; 
-    border: 1px solid #00bcf2;
-}
-
-#post-module .post-box .main-area .post-button 
-{
-    position: absolute;
-    bottom: 18px;
-    right: 18px;
-    background: #00bcf2;
-    color: #FFF;
-    font-family: 'Segoe UI Semibold';
-    font-size: 14px;
-    padding: 5px 10px;
-    cursor: pointer; 
-}
 
 /* HEADER */
 #header 
@@ -216,19 +123,32 @@ body
 {
     width: 100%;
     min-height: 500px;
-    outline: 1px dashed #00FF00;
-    background-color: #DADADA;
+    vertical-align: baseline;
 }
 
 .video-player-container
 {
+    margin: 0;
     outline: 1px dotted #FF0000;
-    width: 613px;
-    height: 350px;
-    margin: auto;
+
 }
 
+.video-player {
 
+    outline: 1px dotted #00FF00;
+}
+
+.video-player img {
+    left: 0px;
+} 
+
+#jcontrols { 
+    display: none;
+}
+
+#controls input {
+    width: 50px;
+}
 
 
 #footer 

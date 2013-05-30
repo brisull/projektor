@@ -64,7 +64,6 @@
     function Projektor($el, options) {
         this.$el = $el;
         this.options = $.extend({}, this._defaults, options);
-
         this.fps = 1000 / this.options.fps;
         this.lastFramePlayedAt = +new Date();
         this.stagewidth = $el.width();
@@ -91,7 +90,7 @@
         _defaults: {
             repeat: false
             , repeatDelay: 0
-            , fps: 14
+            , fps: 28
             , spinnerSrc: 'img/spinner.gif'
             , showSpinner: true
             , spinnerClass: 'spinner'
@@ -107,7 +106,7 @@
             , didInit: false
             , spriteSrcs: []
             , direction: 'forward'
-            , playTo: 20
+            , playTo: 0
         }
 
         , getSpritesFromImages: function() {
@@ -117,6 +116,11 @@
                 self.options.spriteSrcs.push($(this).attr('src') || $(this).data('src'));
                 $(this).remove();
             });
+        }
+
+        , stopAt: function(num) {
+            console.log('Stop at: '+ this.options.playTo);
+            this.options.playTo = num;
         }
 
         , play: function () {
@@ -224,13 +228,13 @@
             $(sprite).css('opacity','1');
             // $('#frameNum').val(newFrameNum);
             self.frameNum = newFrameNum;
-            console.dir({
-                'currentFrame': self.currentFrame, 
-                'spritePlaying': this.spritePlaying,
-                'spriteTop': parseInt(sprite.style.top, 10),
-                'frameOffset': this.keyframeOffset,
-                'spriteSrc': sprite.src 
-            });
+            // console.dir({
+            //     'currentFrame': self.currentFrame, 
+            //     'spritePlaying': this.spritePlaying,
+            //     'spriteTop': parseInt(sprite.style.top, 10),
+            //     'frameOffset': this.keyframeOffset,
+            //     'spriteSrc': sprite.src 
+            // });
         }
 
          
@@ -278,6 +282,8 @@
                 }
                 // console.log('loaded: ' + loaded);
                 if (loaded == total) {
+                    window.totalFrames = self.totalFrames;
+
                     self.$el.find('.sprite').unbind('load');
                     self.options.onImagesLoaded.call(self);
                     console.log("Total Frames: "+ self.totalFrames);
@@ -373,7 +379,7 @@
                     // console.log(yPos);
                     sprite.style.top = yPos + 'px';
                     // console.log(self.keyframeOffset);
-                    console.log(self.currentFrame);
+                    // console.log(self.currentFrame);
                     self.keyframeOffset++;
 
                     self.lastFramePlayedAt = +new Date();
