@@ -192,7 +192,7 @@
                     // two opacity changes: one for the top image and one for the previous one to make sure it's ready
                     .done(function () {
                         self.currentFrame = self.totalFrames;
-                        $(self.sprites).eq(self.spritePlaying).css('opacity','1');
+                        // $(self.sprites).eq(self.spritePlaying).css('opacity','1');
                         $(self.sprites[self.sprites.length - 1])
                             .hide()
                             .css('opacity','1')
@@ -328,7 +328,7 @@
                     }
                     
                     // we pass the last frame because we like it when z stacking works in our favor (the next sprite's keyframe will show through below the last-played sprite)
-                    if ((direction == 'forward' && self.keyframeOffset == keyframes + 1 ) || (direction == 'reverse' && self.keyframeOffset == keyframes)) {
+                    if ((direction == 'forward' && self.keyframeOffset == keyframes + 1 ) || (direction == 'reverse' && self.keyframeOffset == keyframes  )) {
 
                         // console.log( self.spritePlaying);
 
@@ -338,14 +338,16 @@
                         if (!!parent) {
                             // sprite.src = '';
                             // sprite.parentNode.removeChild(sprite);
-                            $(sprite).css('opacity','0');
+                            // 
                             
                             if ( direction == 'reverse') {
                                 self.spritePlaying++;
+                                self.currentFrame++;
                                 $(sprite).nextAll().eq(0).css('opacity','1');
+
                             }
                             else {
-                                // $(sprite).css('opacity','0');
+                                $(sprite).css('opacity','0');
                                 self.spritePlaying--;
                                 self.currentFrame--;
                                 $(sprite).prevAll().eq(1).css('opacity','1');
@@ -383,12 +385,13 @@
                     self.keyframeOffset++;
 
                     self.lastFramePlayedAt = +new Date();
+                    $('#frameNum').val(self.currentFrame);
                     if ( self.currentFrame == self.options.playTo) {
                         window.cancelAnimationFrame(self.intId);
                         self.stop();
                         return;
                     }
-                    $('#frameNum').val(self.currentFrame);
+                    
                 }
 
             } ());
